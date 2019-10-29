@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Simple demo chat</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <script>
+        let socket = io();
+
+        //1-ая логика: Добавление пользователя и проверка на существование
+        function setUserName() {
+            socket.emit('setUserName', document.getElementById('name').value);
+        }
+
+        let user;
+
+        socket.on('userExists', function (data) {
+            document.getElementById('error').innerHTML = data;
+        });
+
+        socket.on('userSet', function (data) {
+            user = data.userName;
+            document.body.innerHTML = `
+            <div class="container"> \
+            <div class="row"> \
+                <div class="col-lg-6 offset-lg-3"> \
+                    <div class="form-group"> \
+                        <input type="text" class="form-control" id="message" placeholder="Пиши здесь..."> \
+                            <button type="button" class="btn btn-primary" name="button" onclick="sendMessage()">Отправить</button> \
+                            <div id="message-container"></div> \
+                    </div> \
+                </div> \
+            </div> \
+        </div>`;
+        });
+
+        //2-ая логика: Добавление сообщений
+        function sendMessage() {
+            let messageData = document.getElementById('message').value;
+            if (messageData) {
+                socket.emit('message', { user: user, message: messageData });
+            }
+
+            document.getElementById('message').value = '';
+        }
+        socket.on('newMessage', function (data) {
+            if (user) {
+                document.getElementById('message-container').innerHTML += '<div><b>' + data.user + '</b>: ' + data.message + '</div>'
+            }
+        })
+    </script>
+    <div class="container">
+        <div class="row">
+            <div col-lg-6 offset-lg-3>
+                <div id="error"></div>
+                <div class="form-group">
+                    <label for="name">Давай общаться!</label>
+                    <input type="text" class="form-control" id="name" placeholder="Введи своё имя!">
+                    <button type="submit" class="btn btn-primary" name="button" onclick="setUserName()">Вперёд!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html> 
